@@ -22,10 +22,17 @@ oas-canon api-3.0.yaml                     # convert, write YAML to stdout
 oas-canon api-3.0.yaml -o api-3.2.yaml     # write to a file
 oas-canon api.json --format yaml           # JSON in, YAML out
 oas-canon api.yaml --canonicalize          # also rewrite 3.2-deprecated forms
+oas-canon api.yaml --validate -o out.yaml  # gate output on OAS 3.2 validity
 cat api.yaml | oas-canon -                 # read from stdin
 ```
 
 Warnings (lossy or ambiguous spots) go to stderr; `-q` silences them.
+
+`--validate` checks the converted document against the official OAS 3.2
+JSON Schema (vendored from
+[spec.openapis.org/oas/3.2/schema/2025-09-17](https://spec.openapis.org/oas/3.2/schema/2025-09-17));
+on failure it prints the errors, writes nothing, and exits 1. The same gate
+is available programmatically via `oas_canon.validate_document(doc)`.
 
 ## What it transforms (3.0.x input)
 
@@ -59,6 +66,20 @@ converting external `$ref` targets (convert each file separately).
 ```bash
 .venv/bin/pytest
 ```
+
+### Corpus tests
+
+Real-world specs (Swagger Petstore, Stripe, GitHub REST — both 3.0 and 3.1
+flavours) are exercised end-to-end: converted, scanned for surviving 3.0
+constructs, checked for idempotency, and validated against the OAS 3.2
+schema. The corpus is large and gitignored; download it once with:
+
+```bash
+python scripts/fetch_corpus.py
+.venv/bin/pytest tests/test_corpus.py
+```
+
+Without the download the corpus tests skip automatically.
 
 Layout: `versions.py` (detection), `schema.py` (3.0-dialect → 2020-12 keyword
 transforms), `document.py` (structural walk of every schema location),

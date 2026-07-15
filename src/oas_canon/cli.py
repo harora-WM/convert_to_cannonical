@@ -30,6 +30,12 @@ def main(argv: list[str] | None = None) -> int:
         help="also rewrite constructs 3.2 deprecates (xml attribute/wrapped, allowEmptyValue)",
     )
     parser.add_argument(
+        "--validate",
+        action="store_true",
+        help="validate the converted document against the official OAS 3.2 schema; "
+        "exit 1 and write nothing if it fails",
+    )
+    parser.add_argument(
         "-q", "--quiet", action="store_true", help="suppress conversion warnings on stderr"
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
@@ -49,6 +55,20 @@ def main(argv: list[str] | None = None) -> int:
     except UnsupportedVersionError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
+
+    if args.validate:
+        from .validate import validate_document
+
+        errors = validate_document(result.document)
+        if errors:
+            for message in errors:
+                print(f"invalid: {message}", file=sys.stderr)
+            print(
+                f"error: converted document failed OAS 3.2 validation "
+                f"({len(errors)} error(s) shown); nothing written",
+                file=sys.stderr,
+            )
+            return 1
 
     if not args.quiet:
         for warning in result.warnings:
