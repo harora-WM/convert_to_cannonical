@@ -104,11 +104,24 @@ def _convert_exclusive_bounds(schema: dict, warn: Warn, path: str) -> None:
             del schema[exclusive_key]
 
 
+# 3.0-era format values naming a content encoding; contentEncoding accepts
+# all RFC 4648 encodings plus quoted-printable from RFC 2045. `byte` is the
+# official 3.0 spelling of base64; the rest were common unofficial usage.
+_ENCODING_FORMATS = {
+    "byte": "base64",
+    "base64": "base64",
+    "base64url": "base64url",
+    "base16": "base16",
+    "base32": "base32",
+    "quoted-printable": "quoted-printable",
+}
+
+
 def _convert_format(schema: dict) -> None:
     fmt = schema.get("format")
-    if fmt == "byte":
+    if fmt in _ENCODING_FORMATS:
         del schema["format"]
-        schema.setdefault("contentEncoding", "base64")
+        schema.setdefault("contentEncoding", _ENCODING_FORMATS[fmt])
     elif fmt == "binary":
         del schema["format"]
         schema.setdefault("contentMediaType", "application/octet-stream")

@@ -146,3 +146,21 @@ def test_nested_recursion():
 def test_boolean_schema_passthrough():
     result, _ = convert({"type": "object", "additionalProperties": False})
     assert result == {"type": "object", "additionalProperties": False}
+
+
+def test_format_base64_and_base64url():
+    result, _ = convert({"type": "string", "format": "base64"})
+    assert result == {"type": "string", "contentEncoding": "base64"}
+    result, _ = convert({"type": "string", "format": "base64url"})
+    assert result == {"type": "string", "contentEncoding": "base64url"}
+
+
+def test_format_quoted_printable():
+    result, _ = convert({"type": "string", "format": "quoted-printable"})
+    assert result == {"type": "string", "contentEncoding": "quoted-printable"}
+
+
+def test_semantic_formats_never_touched():
+    for fmt in ("date-time", "date", "uuid", "email", "int64", "uri", "password"):
+        result, _ = convert({"type": "string", "format": fmt})
+        assert result == {"type": "string", "format": fmt}, fmt
