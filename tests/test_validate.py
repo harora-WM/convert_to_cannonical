@@ -61,3 +61,13 @@ def test_cli_validate_fail_writes_nothing(tmp_path, capsys):
     assert code == 1
     assert not out.exists()
     assert "failed OAS 3.2 validation" in capsys.readouterr().err
+
+
+def test_validate_survives_integer_response_code_keys():
+    # unquoted YAML `200:` parses as an int key; must report, not crash
+    doc = {
+        "openapi": "3.2.0",
+        "info": {"title": "t", "version": "1"},
+        "paths": {"/a": {"get": {"responses": {200: {"description": "ok"}}}}},
+    }
+    assert validate_document(doc) == []

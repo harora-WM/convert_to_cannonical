@@ -216,3 +216,24 @@ def test_canonicalize_xml_and_allow_empty_value():
     assert props["tags"]["xml"] == {"nodeType": "element"}
     param = result.document["paths"]["/a"]["get"]["parameters"][0]
     assert "allowEmptyValue" not in param
+
+
+def test_integer_response_code_keys_stringified():
+    doc = {
+        "openapi": "3.0.0",
+        "info": {"title": "t", "version": "1"},
+        "paths": {
+            "/a": {
+                "get": {
+                    "responses": {
+                        200: {"description": "ok"},
+                        "default": {"description": "err"},
+                    }
+                }
+            }
+        },
+    }
+    result = convert_document(doc)
+    responses = result.document["paths"]["/a"]["get"]["responses"]
+    assert list(responses) == ["200", "default"]
+    assert any("non-string map keys" in w for w in result.warnings)

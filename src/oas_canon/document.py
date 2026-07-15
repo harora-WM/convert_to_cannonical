@@ -58,6 +58,7 @@ def _walk_operation(op: Any, warn: Warn, path: str) -> None:
         return
     _walk_parameter_list(op.get("parameters"), warn, f"{path}/parameters")
     _walk_content_holder(op.get("requestBody"), warn, f"{path}/requestBody")
+    _stringify_keys(op.get("responses"), warn, f"{path}/responses")
     for code, response in _items(op.get("responses"), f"{path}/responses"):
         _walk_response(response, warn, f"{path}/responses/{code}")
     for name, callback in _items(op.get("callbacks"), f"{path}/callbacks"):
@@ -122,6 +123,21 @@ def _walk_media_type(media: Any, media_name: str, warn: Warn, path: str) -> None
         if isinstance(encoding, dict):
             for h_name, header in _items(encoding.get("headers"), f"{path}/encoding/{enc_name}/headers"):
                 _walk_parameter(header, warn, f"{path}/encoding/{enc_name}/headers/{h_name}")
+
+
+def _stringify_keys(node: Any, warn: Warn, path: str) -> None:
+    """Coerce non-string map keys to strings.
+
+    Unquoted YAML status codes (``200:``) parse as integers, but OpenAPI
+    requires string keys; JSON output would coerce them silently, YAML
+    output would not.
+    """
+    if not isinstance(node, dict) or all(isinstance(k, str) for k in node):
+        return
+    pairs = [(k if isinstance(k, str) else str(k), v) for k, v in node.items()]
+    node.clear()
+    node.update(pairs)
+    warn(f"{path}: coerced non-string map keys to strings (unquoted YAML status codes?)")
 
 
 def _items(node: Any, path: str):
