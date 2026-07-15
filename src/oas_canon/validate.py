@@ -25,19 +25,6 @@ def _validator() -> Draft202012Validator:
     return Draft202012Validator(schema)
 
 
-def _jsonify(node):
-    """Coerce to the JSON data model: map keys become strings.
-
-    Unquoted YAML scalars like ``200:`` parse as integer keys and would
-    crash regex-based keyword checks in jsonschema.
-    """
-    if isinstance(node, dict):
-        return {str(k): _jsonify(v) for k, v in node.items()}
-    if isinstance(node, list):
-        return [_jsonify(v) for v in node]
-    return node
-
-
 def validate_document(document: dict, *, limit: int = 20) -> list[str]:
     """Validate against the OAS 3.2 schema; return human-readable errors.
 
@@ -46,7 +33,7 @@ def validate_document(document: dict, *, limit: int = 20) -> list[str]:
     surface before generic oneOf noise.
     """
     errors = sorted(
-        _validator().iter_errors(_jsonify(document)),
+        _validator().iter_errors(document),
         key=lambda e: len(e.absolute_path),
         reverse=True,
     )
