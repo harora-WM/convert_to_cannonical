@@ -9,12 +9,19 @@ key order are preserved) and **idempotent** (running it on its own output is
 a no-op). This branch is the minimal JSON-only integration build: it operates
 on already-parsed dicts and has a single dependency (`jsonschema`).
 
-## Install
+## Integration (vendor the folder)
 
-```bash
-python3 -m venv .venv
-.venv/bin/pip install -e '.[dev]'
-```
+This branch is not pip-installable by design — copy the package folder into
+your project and add its single dependency:
+
+1. Copy `src/oas_canon/` (keep the folder intact, including `data/`)
+   anywhere in your package tree, e.g. `yourapp/oas_canon/`.
+2. Add `jsonschema>=4.18` to your `requirements.txt`.
+3. Import it like your own code:
+   `from yourapp.oas_canon import convert_document, validate_document`
+
+The folder works at any nesting depth (resources are resolved via
+`__package__`, not a hardcoded name).
 
 ## Usage (library)
 
@@ -68,8 +75,13 @@ converting external `$ref` targets (convert each file separately).
 ## Development
 
 ```bash
-.venv/bin/pytest
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+PYTHONPATH=src .venv/bin/pytest tests
 ```
+
+(`PYTHONPATH=src` because the package is not installed — the repo runs it
+vendor-style, same as an integrating project would.)
 
 Real-world corpus tests (Stripe, GitHub, Discord, Plaid, …) live on the
 `main` branch alongside the CLI; this branch keeps the unit and
