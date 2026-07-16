@@ -1,7 +1,7 @@
+import json
 from pathlib import Path
 
 from oas_canon import convert_document, validate_document
-from oas_canon.io import load
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -16,7 +16,7 @@ def test_minimal_valid_document():
 
 
 def test_converted_fixture_is_valid():
-    doc, _ = load(str(FIXTURES / "petstore-3.0.yaml"))
+    doc = json.loads((FIXTURES / "petstore-3.0.json").read_text())
     result = convert_document(doc)
     assert validate_document(result.document) == []
 
