@@ -15,23 +15,31 @@ python3 -m venv .venv
 .venv/bin/pip install -e '.[dev]'
 ```
 
-## Usage
+## Usage (library)
 
-```bash
-oas-canon api-3.0.yaml                     # convert, write YAML to stdout
-oas-canon api-3.0.yaml -o api-3.2.yaml     # write to a file
-oas-canon api.json --format yaml           # JSON in, YAML out
-oas-canon api.yaml --validate -o out.yaml  # gate output on OAS 3.2 validity
-cat api.yaml | oas-canon -                 # read from stdin
+This branch is the minimal integration build — no CLI; call the API:
+
+```python
+from oas_canon import convert_document, validate_document
+from oas_canon.io import load, dump   # optional round-trip file helpers
+
+doc, fmt = load("openapi.yaml")       # or any dict you already parsed
+result = convert_document(doc)        # mutates in place; returns ConversionResult
+for w in result.warnings:             # lossy/ambiguous spots, with exact paths
+    log.info("oas-canon: %s", w)
+
+errors = validate_document(result.document)   # [] means valid OAS 3.2.0
+if not errors:
+    open("openapi-3.2.yaml", "w").write(dump(result.document, fmt))
 ```
 
-Warnings (lossy or ambiguous spots) go to stderr; `-q` silences them.
+`convert_document` raises `UnsupportedVersionError` for Swagger 2.0,
+malformed versions, or anything ≥ 3.3. `validate_document` checks against
+the official OAS 3.2 JSON Schema (vendored from
+[spec.openapis.org/oas/3.2/schema/2025-09-17](https://spec.openapis.org/oas/3.2/schema/2025-09-17))
+and returns human-readable error strings.
 
-`--validate` checks the converted document against the official OAS 3.2
-JSON Schema (vendored from
-[spec.openapis.org/oas/3.2/schema/2025-09-17](https://spec.openapis.org/oas/3.2/schema/2025-09-17));
-on failure it prints the errors, writes nothing, and exits 1. The same gate
-is available programmatically via `oas_canon.validate_document(doc)`.
+The full-featured build (CLI, `--canonicalize`) lives on the `main` branch.
 
 ## What it transforms (3.0.x input)
 
@@ -77,4 +85,5 @@ Without the download the corpus tests skip automatically.
 
 Layout: `versions.py` (detection), `schema.py` (3.0-dialect → 2020-12 keyword
 transforms), `document.py` (structural walk of every schema location),
-`converter.py` (orchestration), `io.py` (round-trip YAML/JSON), `cli.py`.
+`converter.py` (orchestration), `validate.py` (OAS 3.2 gate),
+`io.py` (round-trip YAML/JSON).
