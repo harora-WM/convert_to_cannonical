@@ -25,11 +25,6 @@ def main(argv: list[str] | None = None) -> int:
         help="output format (default: same as input)",
     )
     parser.add_argument(
-        "--canonicalize",
-        action="store_true",
-        help="also rewrite constructs 3.2 deprecates (xml attribute/wrapped, allowEmptyValue)",
-    )
-    parser.add_argument(
         "--validate",
         action="store_true",
         help="validate the converted document against the official OAS 3.2 schema; "
@@ -51,7 +46,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     try:
-        result = convert_document(document, canonical=args.canonicalize)
+        result = convert_document(document)
     except UnsupportedVersionError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2

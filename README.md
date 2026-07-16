@@ -21,7 +21,6 @@ python3 -m venv .venv
 oas-canon api-3.0.yaml                     # convert, write YAML to stdout
 oas-canon api-3.0.yaml -o api-3.2.yaml     # write to a file
 oas-canon api.json --format yaml           # JSON in, YAML out
-oas-canon api.yaml --canonicalize          # also rewrite 3.2-deprecated forms
 oas-canon api.yaml --validate -o out.yaml  # gate output on OAS 3.2 validity
 cat api.yaml | oas-canon -                 # read from stdin
 ```
@@ -53,11 +52,6 @@ Schemas are found everywhere they can occur: `components.schemas`, parameters,
 headers, request bodies, responses, callbacks, webhooks, `pathItems`,
 `mediaTypes`, `itemSchema`, encodings, and all nested JSON Schema keywords.
 
-With `--canonicalize`, constructs 3.2 deprecates are also rewritten:
-`xml: {attribute: true}` → `xml: {nodeType: attribute}`,
-`xml: {wrapped: true}` → `xml: {nodeType: element}`, and `allowEmptyValue`
-is dropped from parameters.
-
 Not supported: Swagger 2.0 input (rejected with a clear error), resolving or
 converting external `$ref` targets (convert each file separately).
 
@@ -83,5 +77,4 @@ Without the download the corpus tests skip automatically.
 
 Layout: `versions.py` (detection), `schema.py` (3.0-dialect → 2020-12 keyword
 transforms), `document.py` (structural walk of every schema location),
-`canonical.py` (opt-in 3.2 canonicalization), `converter.py` (orchestration),
-`io.py` (round-trip YAML/JSON), `cli.py`.
+`converter.py` (orchestration), `io.py` (round-trip YAML/JSON), `cli.py`.
