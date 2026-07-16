@@ -19,7 +19,9 @@ SCHEMA_RESOURCE = "data/oas-3.2-schema.json"
 
 @lru_cache(maxsize=1)
 def _validator() -> Draft202012Validator:
-    text = files("oas_canon").joinpath(SCHEMA_RESOURCE).read_text(encoding="utf-8")
+    # __package__ (not a hardcoded name) so the folder stays importable
+    # when vendored under another package, e.g. pipeline.oas_canon
+    text = files(__package__).joinpath(SCHEMA_RESOURCE).read_text(encoding="utf-8")
     schema = json.loads(text)
     Draft202012Validator.check_schema(schema)
     return Draft202012Validator(schema)
