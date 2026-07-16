@@ -23,6 +23,28 @@ your project and add its single dependency:
 The folder works at any nesting depth (resources are resolved via
 `__package__`, not a hardcoded name).
 
+The public API is exactly three names, always imported from the package top
+level (submodules are internals and may change):
+
+```python
+from yourapp.oas_canon import convert_document, validate_document, UnsupportedVersionError
+```
+
+| Name | Purpose |
+|---|---|
+| `convert_document(spec: dict)` | converts in place; returns a `ConversionResult` with `.document` (the 3.2.0 dict), `.warnings` (list of audit strings — log them), `.source_version` |
+| `validate_document(doc: dict)` | returns `[]` if the dict is a valid OAS 3.2.0 document, else human-readable error strings |
+| `UnsupportedVersionError` | raised by `convert_document` for Swagger 2.0, malformed versions, or ≥ 3.3 |
+
+> **⚠️ Before wiring this in:** any downstream code that reads OpenAPI
+> 3.0-style keywords will silently misbehave on canonical 3.2 documents.
+> The classic case is nullability: `schema.get("nullable")` is always
+> absent after conversion — check `"null" in schema.get("type", [])`
+> (when `type` is a list) instead. Audit consumers for `nullable`,
+> boolean `exclusiveMinimum`/`exclusiveMaximum`, schema-level `example`,
+> and `format: byte`/`binary` before switching them to converted specs,
+> and ship those updates in the same change as the integration.
+
 ## Usage (library)
 
 No CLI, no file I/O — pass a parsed spec dict, get a converted dict back:
