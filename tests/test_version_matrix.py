@@ -6,7 +6,27 @@ import copy
 import pytest
 
 from oas_canon import convert_document, validate_document
-from test_corpus import find_30_leftovers
+
+
+def find_30_leftovers(node, path="", acc=None):
+    """Scan for nullable / boolean exclusive bounds outside example values."""
+    if acc is None:
+        acc = []
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if key in ("example", "examples", "default", "enum", "const"):
+                continue  # payload values may legitimately contain these words
+            if str(key).startswith("x-"):
+                continue  # extension content is opaque; the converter leaves it alone
+            if key == "nullable":
+                acc.append(f"{path}/nullable")
+            if key in ("exclusiveMinimum", "exclusiveMaximum") and isinstance(value, bool):
+                acc.append(f"{path}/{key}")
+            find_30_leftovers(value, f"{path}/{key}", acc)
+    elif isinstance(node, list):
+        for i, item in enumerate(node):
+            find_30_leftovers(item, f"{path}/{i}", acc)
+    return acc
 
 ALL_30 = ["3.0.0", "3.0.1", "3.0.2", "3.0.3", "3.0.4"]
 ALL_31 = ["3.1.0", "3.1.1", "3.1.2"]

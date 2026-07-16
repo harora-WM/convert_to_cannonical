@@ -69,19 +69,9 @@ converting external `$ref` targets (convert each file separately).
 .venv/bin/pytest
 ```
 
-### Corpus tests
-
-Real-world specs (Swagger Petstore, Stripe, GitHub REST — both 3.0 and 3.1
-flavours) are exercised end-to-end: converted, scanned for surviving 3.0
-constructs, checked for idempotency, and validated against the OAS 3.2
-schema. The corpus is large and gitignored; download it once with:
-
-```bash
-python scripts/fetch_corpus.py
-.venv/bin/pytest tests/test_corpus.py
-```
-
-Without the download the corpus tests skip automatically.
+Real-world corpus tests (Stripe, GitHub, Discord, Plaid, …) live on the
+`main` branch alongside the CLI; this branch keeps the unit and
+version-matrix suites only.
 
 Layout: `versions.py` (detection), `schema.py` (3.0-dialect → 2020-12 keyword
 transforms), `document.py` (structural walk of every schema location),
